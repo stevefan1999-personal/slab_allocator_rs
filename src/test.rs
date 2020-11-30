@@ -210,7 +210,7 @@ fn allocate_multiple_4096_blocks() {
     unsafe {
         *(c.as_ptr() as *mut (u64, u64)) = (0xdeafdeadbeafbabe, 0xdeafdeadbeafbabe);
     }
-    assert_eq!(unsafe { a.as_ptr().offset(9 * 4096) }, c.as_ptr());
+    assert_eq!(unsafe { a.as_ptr().offset(14 * 4096) }, c.as_ptr());
     assert_eq!(unsafe { b.as_ptr().offset(-4096) }, d.as_ptr());
 }
 

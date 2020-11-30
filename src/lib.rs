@@ -70,7 +70,7 @@ impl Heap {
             "Heap size should be a multiple of minimum heap size"
         );
         let slab_size = heap_size / NUM_OF_SLABS;
-        Heap {
+        let mut heap = Heap {
             slab_64_bytes: Slab::new(heap_start_addr, slab_size, 64),
             slab_128_bytes: Slab::new(heap_start_addr + slab_size, slab_size, 128),
             slab_256_bytes: Slab::new(heap_start_addr + 2 * slab_size, slab_size, 256),
@@ -78,11 +78,10 @@ impl Heap {
             slab_1024_bytes: Slab::new(heap_start_addr + 4 * slab_size, slab_size, 1024),
             slab_2048_bytes: Slab::new(heap_start_addr + 5 * slab_size, slab_size, 2048),
             slab_4096_bytes: Slab::new(heap_start_addr + 6 * slab_size, slab_size, 4096),
-            buddy_system_allocator: buddy_system_allocator::Heap::new(
-                // heap_start_addr + 7 * slab_size,
-                // slab_size,
-            ),
-        }
+            buddy_system_allocator: buddy_system_allocator::Heap::new(),
+        };
+        heap.buddy_system_allocator.init(heap_start_addr + 7 * slab_size, slab_size);
+        heap
     }
 
     /// Adds memory to the heap. The start address must be valid
