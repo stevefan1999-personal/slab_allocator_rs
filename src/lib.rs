@@ -1,4 +1,4 @@
-#![feature(alloc, allocator_api)]
+#![feature(allocator_api)]
 #![feature(const_fn)]
 #![no_std]
 
@@ -12,7 +12,7 @@ mod slab;
 
 use core::ops::Deref;
 
-use alloc::alloc::{Alloc, AllocErr, Layout};
+use alloc::alloc::Layout;
 use core::alloc::GlobalAlloc;
 use core::ptr::NonNull;
 use slab::Slab;
@@ -105,10 +105,10 @@ impl Heap {
     }
 
     /// Allocates a chunk of the given size with the given alignment. Returns a pointer to the
-    /// beginning of that chunk if it was successful. Else it returns `Err`.
+    /// beginning of that chunk if it was successful. Else it returns `()`.
     /// This function finds the slab of lowest size which can still accomodate the given chunk.
     /// The runtime is in `O(1)` for chunks of size <= 4096, and `O(n)` when chunk size is > 4096,
-    pub fn allocate(&mut self, layout: Layout) -> Result<NonNull<u8>, AllocErr> {
+    pub fn allocate(&mut self, layout: Layout) -> Result<NonNull<u8>, ()> {
         match Heap::layout_to_allocator(&layout) {
             HeapAllocator::Slab64Bytes => self.slab_64_bytes.allocate(layout),
             HeapAllocator::Slab128Bytes => self.slab_128_bytes.allocate(layout),
@@ -182,20 +182,6 @@ impl Heap {
     }
 }
 
-unsafe impl Alloc for Heap {
-    unsafe fn alloc(&mut self, layout: Layout) -> Result<NonNull<u8>, AllocErr> {
-        self.allocate(layout)
-    }
-
-    unsafe fn dealloc(&mut self, ptr: NonNull<u8>, layout: Layout) {
-        self.deallocate(ptr, layout)
-    }
-
-    fn usable_size(&self, layout: &Layout) -> (usize, usize) {
-        self.usable_size(layout)
-    }
-}
-
 pub struct LockedHeap(Mutex<Option<Heap>>);
 
 impl LockedHeap {
@@ -221,32 +207,6 @@ impl Deref for LockedHeap {
 
     fn deref(&self) -> &Mutex<Option<Heap>> {
         &self.0
-    }
-}
-
-unsafe impl<'a> Alloc for &'a LockedHeap {
-    unsafe fn alloc(&mut self, layout: Layout) -> Result<NonNull<u8>, AllocErr> {
-        if let Some(ref mut heap) = *self.0.lock() {
-            heap.allocate(layout)
-        } else {
-            panic!("allocate: heap not initialized");
-        }
-    }
-
-    unsafe fn dealloc(&mut self, ptr: NonNull<u8>, layout: Layout) {
-        if let Some(ref mut heap) = *self.0.lock() {
-            heap.deallocate(ptr, layout)
-        } else {
-            panic!("deallocate: heap not initialized");
-        }
-    }
-
-    fn usable_size(&self, layout: &Layout) -> (usize, usize) {
-        if let Some(ref mut heap) = *self.0.lock() {
-            heap.usable_size(layout)
-        } else {
-            panic!("usable_size: heap not initialized");
-        }
     }
 }
 

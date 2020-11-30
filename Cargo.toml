@@ -1,14 +1,14 @@
 [package]
 name = "slab_allocator"
-version = "0.3.5"
-authors = ["Robert Węcławski <r.weclawski@gmail.com>"]
+version = "0.4.0"
+authors = ["arioz0330 <arios2@live.com>"]
 license = "MIT"
 
-description = "Slab allocator for no_std systems. Uses multiple slabs with blocks of different sizes and a linked list for blocks larger than 4096 bytes"
+description = "Slab allocator for no_std systems. Uses multiple slabs with blocks of different sizes and a linked list for blocks larger than 4096 bytes updated to latest rust"
 keywords = ["slab", "allocator", "no_std", "heap", "kernel"]
 
-repository = "https://github.com/weclaw1/slab_allocator"
+repository = "https://github.com/arioz0330/slab_allocator"
 
 [dependencies]
-linked_list_allocator = "0.6.3"
-spin = "0.4.9"
+linked_list_allocator = "0.8.6"
+spin = "0.7.0"
