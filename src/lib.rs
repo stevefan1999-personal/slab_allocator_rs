@@ -6,7 +6,7 @@ extern crate alloc;
 
 extern crate spin;
 
-extern crate linked_list_allocator;
+extern crate buddy_system_allocator;
 
 mod slab;
 
@@ -48,7 +48,7 @@ pub struct Heap {
     slab_1024_bytes: Slab,
     slab_2048_bytes: Slab,
     slab_4096_bytes: Slab,
-    linked_list_allocator: linked_list_allocator::Heap,
+    buddy_system_allocator: buddy_system_allocator::Heap,
 }
 
 impl Heap {
@@ -78,9 +78,9 @@ impl Heap {
             slab_1024_bytes: Slab::new(heap_start_addr + 4 * slab_size, slab_size, 1024),
             slab_2048_bytes: Slab::new(heap_start_addr + 5 * slab_size, slab_size, 2048),
             slab_4096_bytes: Slab::new(heap_start_addr + 6 * slab_size, slab_size, 4096),
-            linked_list_allocator: linked_list_allocator::Heap::new(
-                heap_start_addr + 7 * slab_size,
-                slab_size,
+            buddy_system_allocator: buddy_system_allocator::Heap::new(
+                // heap_start_addr + 7 * slab_size,
+                // slab_size,
             ),
         }
     }
@@ -100,7 +100,7 @@ impl Heap {
             HeapAllocator::Slab1024Bytes => self.slab_1024_bytes.grow(mem_start_addr, mem_size),
             HeapAllocator::Slab2048Bytes => self.slab_2048_bytes.grow(mem_start_addr, mem_size),
             HeapAllocator::Slab4096Bytes => self.slab_4096_bytes.grow(mem_start_addr, mem_size),
-            HeapAllocator::LinkedListAllocator => self.linked_list_allocator.extend(mem_size),
+            HeapAllocator::LinkedListAllocator => self.buddy_system_allocator.add_to_heap(mem_start_addr, mem_size),
         }
     }
 
@@ -118,7 +118,7 @@ impl Heap {
             HeapAllocator::Slab2048Bytes => self.slab_2048_bytes.allocate(layout),
             HeapAllocator::Slab4096Bytes => self.slab_4096_bytes.allocate(layout),
             HeapAllocator::LinkedListAllocator => {
-                self.linked_list_allocator.allocate_first_fit(layout)
+                self.buddy_system_allocator.alloc(layout)
             }
         }
     }
@@ -140,7 +140,7 @@ impl Heap {
             HeapAllocator::Slab2048Bytes => self.slab_2048_bytes.deallocate(ptr),
             HeapAllocator::Slab4096Bytes => self.slab_4096_bytes.deallocate(ptr),
             HeapAllocator::LinkedListAllocator => {
-                self.linked_list_allocator.deallocate(ptr, layout)
+                self.buddy_system_allocator.dealloc(ptr, layout)
             }
         }
     }
