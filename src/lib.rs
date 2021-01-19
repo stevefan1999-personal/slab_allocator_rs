@@ -80,7 +80,8 @@ impl Heap {
             slab_4096_bytes: Slab::new(heap_start_addr + 6 * slab_size, slab_size, 4096),
             buddy_system_allocator: buddy_system_allocator::Heap::new(),
         };
-        heap.buddy_system_allocator.init(heap_start_addr + 7 * slab_size, slab_size);
+        heap.buddy_system_allocator
+            .init(heap_start_addr + 7 * slab_size, slab_size);
         heap
     }
 
@@ -99,7 +100,9 @@ impl Heap {
             HeapAllocator::Slab1024Bytes => self.slab_1024_bytes.grow(mem_start_addr, mem_size),
             HeapAllocator::Slab2048Bytes => self.slab_2048_bytes.grow(mem_start_addr, mem_size),
             HeapAllocator::Slab4096Bytes => self.slab_4096_bytes.grow(mem_start_addr, mem_size),
-            HeapAllocator::LinkedListAllocator => self.buddy_system_allocator.add_to_heap(mem_start_addr, mem_size),
+            HeapAllocator::LinkedListAllocator => self
+                .buddy_system_allocator
+                .add_to_heap(mem_start_addr, mem_size),
         }
     }
 
@@ -116,9 +119,7 @@ impl Heap {
             HeapAllocator::Slab1024Bytes => self.slab_1024_bytes.allocate(layout),
             HeapAllocator::Slab2048Bytes => self.slab_2048_bytes.allocate(layout),
             HeapAllocator::Slab4096Bytes => self.slab_4096_bytes.allocate(layout),
-            HeapAllocator::LinkedListAllocator => {
-                self.buddy_system_allocator.alloc(layout)
-            }
+            HeapAllocator::LinkedListAllocator => self.buddy_system_allocator.alloc(layout),
         }
     }
 
@@ -138,9 +139,7 @@ impl Heap {
             HeapAllocator::Slab1024Bytes => self.slab_1024_bytes.deallocate(ptr),
             HeapAllocator::Slab2048Bytes => self.slab_2048_bytes.deallocate(ptr),
             HeapAllocator::Slab4096Bytes => self.slab_4096_bytes.deallocate(ptr),
-            HeapAllocator::LinkedListAllocator => {
-                self.buddy_system_allocator.dealloc(ptr, layout)
-            }
+            HeapAllocator::LinkedListAllocator => self.buddy_system_allocator.dealloc(ptr, layout),
         }
     }
 

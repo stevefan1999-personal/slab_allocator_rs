@@ -22,7 +22,7 @@ impl Slab {
             self.free_block_list.push(block);
         }
     }
-    
+
     //patched this to return `Err(())`, as the function calling this expects to return this too, because of a change in the linked list allocator
     pub fn allocate(&mut self, _layout: Layout) -> Result<NonNull<u8>, ()> {
         match self.free_block_list.pop() {
