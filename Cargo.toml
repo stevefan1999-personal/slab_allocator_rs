@@ -11,4 +11,4 @@ repository = "https://github.com/arioz0330/slab_allocator"
 
 [dependencies]
 buddy_system_allocator = "0.6.0"
-spin = "0.7.0"
+spin = "0.7.1"
