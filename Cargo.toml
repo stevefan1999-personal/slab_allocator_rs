@@ -4,7 +4,7 @@ version = "0.4.0"
 authors = ["arioz0330 <arios2@live.com>"]
 license = "MIT"
 
-description = "Slab allocator for no_std systems. Uses multiple slabs with blocks of different sizes and a linked list for blocks larger than 4096 bytes updated to latest rust"
+description = "Slab allocator for no_std systems. Uses multiple slabs with blocks of different sizes and a buddy system allocator for blocks larger than 4096 bytes. Updated to latest nightly rust"
 keywords = ["slab", "allocator", "no_std", "heap", "kernel"]
 
 repository = "https://github.com/arioz0330/slab_allocator"
