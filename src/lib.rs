@@ -212,7 +212,7 @@ unsafe impl GlobalAlloc for LockedHeap {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         if let Some(ref mut heap) = *self.0.lock() {
             if let Ok(ref mut nnptr) = heap.allocate(layout) {
-                return nnptr.as_ptr();
+                nnptr.as_ptr()
             } else {
                 panic!("allocate: failed");
             }
