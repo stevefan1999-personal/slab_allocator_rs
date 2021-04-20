@@ -3,20 +3,16 @@
 #![no_std]
 
 extern crate alloc;
-
 extern crate spin;
-
 extern crate buddy_system_allocator;
 
 mod slab;
 
 use core::ops::Deref;
-
 use alloc::alloc::Layout;
 use core::alloc::GlobalAlloc;
 use core::ptr::NonNull;
 use slab::Slab;
-
 use spin::Mutex;
 
 #[cfg(test)]
@@ -35,11 +31,11 @@ pub enum HeapAllocator {
     Slab1024Bytes,
     Slab2048Bytes,
     Slab4096Bytes,
-    LinkedListAllocator,
+    BuddySystemAllocator,
 }
 
 /// A fixed size heap backed by multiple slabs with blocks of different sizes.
-/// Allocations over 4096 bytes are served by linked list allocator.
+/// Allocations over 4096 bytes are served by a buddy system allocator.
 pub struct Heap {
     slab_64_bytes: Slab,
     slab_128_bytes: Slab,
@@ -54,7 +50,11 @@ pub struct Heap {
 impl Heap {
     /// Creates a new heap with the given `heap_start_addr` and `heap_size`. The start address must be valid
     /// and the memory in the `[heap_start_addr, heap_start_addr + heap_size)` range must not be used for
-    /// anything else. This function is unsafe because it can cause undefined behavior if the
+    /// anything else. 
+    ///
+    /// # Safety
+    ///
+    /// This function is unsafe because it can cause undefined behavior if the
     /// given address is invalid.
     pub unsafe fn new(heap_start_addr: usize, heap_size: usize) -> Heap {
         assert!(
@@ -88,7 +88,10 @@ impl Heap {
     /// Adds memory to the heap. The start address must be valid
     /// and the memory in the `[mem_start_addr, mem_start_addr + heap_size)` range must not be used for
     /// anything else.
-    /// In case of linked list allocator the memory can only be extended.
+    /// In case of buddy system allocator the memory can only be extended.
+    ///
+    /// # Safety
+    ///
     /// This function is unsafe because it can cause undefined behavior if the
     /// given address is invalid.
     pub unsafe fn grow(&mut self, mem_start_addr: usize, mem_size: usize, slab: HeapAllocator) {
@@ -100,7 +103,7 @@ impl Heap {
             HeapAllocator::Slab1024Bytes => self.slab_1024_bytes.grow(mem_start_addr, mem_size),
             HeapAllocator::Slab2048Bytes => self.slab_2048_bytes.grow(mem_start_addr, mem_size),
             HeapAllocator::Slab4096Bytes => self.slab_4096_bytes.grow(mem_start_addr, mem_size),
-            HeapAllocator::LinkedListAllocator => self
+            HeapAllocator::BuddySystemAllocator => self
                 .buddy_system_allocator
                 .add_to_heap(mem_start_addr, mem_size),
         }
@@ -109,7 +112,7 @@ impl Heap {
     /// Allocates a chunk of the given size with the given alignment. Returns a pointer to the
     /// beginning of that chunk if it was successful. Else it returns `()`.
     /// This function finds the slab of lowest size which can still accomodate the given chunk.
-    /// The runtime is in `O(1)` for chunks of size <= 4096, and `O(n)` when chunk size is > 4096,
+    /// The runtime is in `O(1)` for chunks of size <= 4096, and `probably fast` when chunk size is > 4096,
     pub fn allocate(&mut self, layout: Layout) -> Result<NonNull<u8>, ()> {
         match Heap::layout_to_allocator(&layout) {
             HeapAllocator::Slab64Bytes => self.slab_64_bytes.allocate(layout),
@@ -119,17 +122,20 @@ impl Heap {
             HeapAllocator::Slab1024Bytes => self.slab_1024_bytes.allocate(layout),
             HeapAllocator::Slab2048Bytes => self.slab_2048_bytes.allocate(layout),
             HeapAllocator::Slab4096Bytes => self.slab_4096_bytes.allocate(layout),
-            HeapAllocator::LinkedListAllocator => self.buddy_system_allocator.alloc(layout),
+            HeapAllocator::BuddySystemAllocator => self.buddy_system_allocator.alloc(layout),
         }
     }
 
     /// Frees the given allocation. `ptr` must be a pointer returned
-    /// by a call to the `allocate` function with identical size and alignment. Undefined
-    /// behavior may occur for invalid arguments, thus this function is unsafe.
+    /// by a call to the `allocate` function with identical size and alignment.
     ///
     /// This function finds the slab which contains address of `ptr` and adds the blocks beginning
     /// with `ptr` address to the list of free blocks.
-    /// This operation is in `O(1)` for blocks <= 4096 bytes and `O(n)` for blocks > 4096 bytes.
+    /// This operation is in `O(1)` for blocks <= 4096 bytes and `probably fast` for blocks > 4096 bytes.
+    ///
+    /// # Safety
+    /// 
+    /// Undefined behavior may occur for invalid arguments, thus this function is unsafe.
     pub unsafe fn deallocate(&mut self, ptr: NonNull<u8>, layout: Layout) {
         match Heap::layout_to_allocator(&layout) {
             HeapAllocator::Slab64Bytes => self.slab_64_bytes.deallocate(ptr),
@@ -139,7 +145,7 @@ impl Heap {
             HeapAllocator::Slab1024Bytes => self.slab_1024_bytes.deallocate(ptr),
             HeapAllocator::Slab2048Bytes => self.slab_2048_bytes.deallocate(ptr),
             HeapAllocator::Slab4096Bytes => self.slab_4096_bytes.deallocate(ptr),
-            HeapAllocator::LinkedListAllocator => self.buddy_system_allocator.dealloc(ptr, layout),
+            HeapAllocator::BuddySystemAllocator => self.buddy_system_allocator.dealloc(ptr, layout),
         }
     }
 
@@ -154,14 +160,14 @@ impl Heap {
             HeapAllocator::Slab1024Bytes => (layout.size(), 1024),
             HeapAllocator::Slab2048Bytes => (layout.size(), 2048),
             HeapAllocator::Slab4096Bytes => (layout.size(), 4096),
-            HeapAllocator::LinkedListAllocator => (layout.size(), layout.size()),
+            HeapAllocator::BuddySystemAllocator => (layout.size(), layout.size()),
         }
     }
 
     ///Finds allocator to use based on layout size and alignment
     pub fn layout_to_allocator(layout: &Layout) -> HeapAllocator {
         if layout.size() > 4096 {
-            HeapAllocator::LinkedListAllocator
+            HeapAllocator::BuddySystemAllocator
         } else if layout.size() <= 64 && layout.align() <= 64 {
             HeapAllocator::Slab64Bytes
         } else if layout.size() <= 128 && layout.align() <= 128 {
@@ -187,13 +193,21 @@ impl LockedHeap {
         LockedHeap(Mutex::new(None))
     }
 
+    /// # Safety
+    ///
+    /// This function is unsafe because it can cause undefined behavior if the
+    /// given address is invalid.
     pub unsafe fn init(&self, heap_start_addr: usize, size: usize) {
         *self.0.lock() = Some(Heap::new(heap_start_addr, size));
     }
 
     /// Creates a new heap with the given `heap_start_addr` and `heap_size`. The start address must be valid
     /// and the memory in the `[heap_start_addr, heap_bottom + heap_size)` range must not be used for
-    /// anything else. This function is unsafe because it can cause undefined behavior if the
+    /// anything else. 
+    ///
+    /// # Safety
+    ///
+    /// This function is unsafe because it can cause undefined behavior if the
     /// given address is invalid.
     pub unsafe fn new(heap_start_addr: usize, heap_size: usize) -> LockedHeap {
         LockedHeap(Mutex::new(Some(Heap::new(heap_start_addr, heap_size))))
