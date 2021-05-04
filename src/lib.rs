@@ -44,7 +44,7 @@ pub struct Heap {
     slab_1024_bytes: Slab,
     slab_2048_bytes: Slab,
     slab_4096_bytes: Slab,
-    buddy_system_allocator: buddy_system_allocator::Heap,
+    buddy_system_allocator: buddy_system_allocator::Heap<32>,
 }
 
 impl Heap {
