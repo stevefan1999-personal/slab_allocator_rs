@@ -7,6 +7,7 @@ edition = "2018"
 
 description = "Slab allocator for no_std systems. Uses multiple slabs with blocks of different sizes and a buddy system allocator for blocks larger than 4096 bytes. Updated to latest nightly rust"
 keywords = ["slab", "allocator", "no_std", "heap", "kernel"]
+categories = ["no-std", "memory-management"]
 
 repository = "https://github.com/arioz0330/slab_allocator"
 readme = "README.md"
