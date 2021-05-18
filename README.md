@@ -25,3 +25,5 @@ pub fn init_heap() {
 
 ## License
 This crate is licensed under MIT. See LICENSE for details.
+
+This is an updated fork of https://github.com/weclaw1/slab_allocator
