@@ -1,15 +1,14 @@
-#![feature(allocator_api)]
 #![no_std]
 
 extern crate alloc;
-extern crate spin;
 extern crate buddy_system_allocator;
+extern crate spin;
 
 mod slab;
 
-use core::ops::Deref;
 use alloc::alloc::Layout;
 use core::alloc::GlobalAlloc;
+use core::ops::Deref;
 use core::ptr::NonNull;
 use slab::Slab;
 use spin::Mutex;
@@ -49,7 +48,7 @@ pub struct Heap {
 impl Heap {
     /// Creates a new heap with the given `heap_start_addr` and `heap_size`. The start address must be valid
     /// and the memory in the `[heap_start_addr, heap_start_addr + heap_size)` range must not be used for
-    /// anything else. 
+    /// anything else.
     ///
     /// # Safety
     ///
@@ -133,7 +132,7 @@ impl Heap {
     /// This operation is in `O(1)` for blocks <= 4096 bytes and `probably fast` for blocks > 4096 bytes.
     ///
     /// # Safety
-    /// 
+    ///
     /// Undefined behavior may occur for invalid arguments, thus this function is unsafe.
     pub unsafe fn deallocate(&mut self, ptr: NonNull<u8>, layout: Layout) {
         match Heap::layout_to_allocator(&layout) {
@@ -202,7 +201,7 @@ impl LockedHeap {
 
     /// Creates a new heap with the given `heap_start_addr` and `heap_size`. The start address must be valid
     /// and the memory in the `[heap_start_addr, heap_bottom + heap_size)` range must not be used for
-    /// anything else. 
+    /// anything else.
     ///
     /// # Safety
     ///
