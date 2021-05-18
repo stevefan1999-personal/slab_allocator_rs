@@ -1,4 +1,4 @@
-# slab_allocator
+# slab_allocator_rs
 ## Usage
 
 Create a static allocator in your root module:
