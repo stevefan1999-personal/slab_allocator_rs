@@ -9,6 +9,7 @@ description = "Slab allocator for no_std systems. Uses multiple slabs with block
 keywords = ["slab", "allocator", "no_std", "heap", "kernel"]
 
 repository = "https://github.com/arioz0330/slab_allocator"
+readme = "README.md"
 
 [dependencies]
 buddy_system_allocator = "0.8.0"
