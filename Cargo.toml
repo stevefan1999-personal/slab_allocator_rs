@@ -1,9 +1,9 @@
 [package]
 name = "slab_allocator_rs"
 version = "1.0.0"
-authors = ["arioz0330 <arios2@live.com>"]
+authors = ["axriosn <axriosn@gmail.com>"]
 license = "MIT"
-edition = "2018"
+edition = "2021"
 
 description = "Slab allocator for no_std systems. Uses multiple slabs with blocks of different sizes and a buddy system allocator for blocks larger than 4096 bytes. Updated to latest nightly rust"
 keywords = ["slab", "allocator", "no_std", "heap", "kernel"]
@@ -14,4 +14,4 @@ readme = "README.md"
 
 [dependencies]
 buddy_system_allocator = "0.8.0"
-spin = "0.9.1"
+spin = "0.9.2"
