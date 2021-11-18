@@ -143,7 +143,7 @@ impl Heap {
   /// Returns bounds on the guaranteed usable size of a successful
   /// allocation created with the specified `layout`.
   pub fn usable_size(&self, layout: &Layout) -> (usize, usize) {
-    match Heap::layout_to_allocator(&layout) {
+    match Heap::layout_to_allocator(layout) {
       HeapAllocator::Slab64Bytes => (layout.size(), 64),
       HeapAllocator::Slab128Bytes => (layout.size(), 128),
       HeapAllocator::Slab256Bytes => (layout.size(), 256),
