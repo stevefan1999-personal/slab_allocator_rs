@@ -1,6 +1,6 @@
 [package]
 name = "slab_allocator_rs"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["axriosn <axriosn@gmail.com>"]
 license = "MIT"
 edition = "2021"
