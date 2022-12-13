@@ -219,7 +219,7 @@ unsafe impl GlobalAlloc for LockedHeap {
       if let Ok(ref mut non_null_ptr) = heap.allocate(layout) {
         non_null_ptr.as_ptr()
       } else {
-        ptr::null_mut()
+        core::ptr::null_mut()
       }
     } else {
       panic!("allocate: heap not initialized");
